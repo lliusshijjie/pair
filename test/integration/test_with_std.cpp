@@ -26,8 +26,8 @@ void setup_console_encoding() {
     SetConsoleCP(CP_UTF8);
     
     // Set standard output to UTF-8 mode
-    _setmode(_fileno(stdout), _O_U8TEXT);
-    _setmode(_fileno(stderr), _O_U8TEXT);
+    // _setmode(_fileno(stdout), _O_U8TEXT);
+    // _setmode(_fileno(stderr), _O_U8TEXT);
 #endif
 }
 

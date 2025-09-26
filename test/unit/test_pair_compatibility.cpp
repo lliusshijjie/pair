@@ -22,8 +22,8 @@ void setup_console_encoding() {
     SetConsoleCP(CP_UTF8);
     
     // 设置标准输出为UTF-8模式
-    _setmode(_fileno(stdout), _O_U8TEXT);
-    _setmode(_fileno(stderr), _O_U8TEXT);
+    // _setmode(_fileno(stdout), _O_U8TEXT);
+    // _setmode(_fileno(stderr), _O_U8TEXT);
 #endif
 }
 
