@@ -36,6 +36,21 @@
 #include <type_traits>
 #include <utility>
 
+// 编译器优化提示
+#if defined(__GNUC__) || defined(__clang__)
+#define MYSTL_ALWAYS_INLINE __attribute__((always_inline))
+#define MYSTL_LIKELY(x) __builtin_expect(!!(x), 1)
+#define MYSTL_UNLIKELY(x) __builtin_expect(!!(x), 0)
+#elif defined(_MSC_VER)
+#define MYSTL_ALWAYS_INLINE __forceinline
+#define MYSTL_LIKELY(x) (x)
+#define MYSTL_UNLIKELY(x) (x)
+#else
+#define MYSTL_ALWAYS_INLINE
+#define MYSTL_LIKELY(x) (x)
+#define MYSTL_UNLIKELY(x) (x)
+#endif
+
 namespace my_stl {
 
 // ============================================================================
@@ -74,14 +89,15 @@ public:
     constexpr pair(const pair&) = default;
 
     // 移动构造函数
-    constexpr pair(pair&&) noexcept = default;
+    constexpr pair(pair&&) noexcept(noexcept(T1(std::move(std::declval<T1&>()))) && noexcept(T2(std::move(std::declval<T2&>())))) = default;
 
     // 从其他类型的 pair 构造
     template <typename U1, typename U2>
     constexpr pair(const pair<U1, U2>& other) : first(other.first), second(other.second) {}
 
     template <typename U1, typename U2>
-    constexpr pair(pair<U1, U2>&& other) noexcept : first(std::move(other.first)), second(std::move(other.second)) {}
+    constexpr pair(pair<U1, U2>&& other) noexcept(noexcept(T1(std::move(other.first))) && noexcept(T2(std::move(other.second)))) 
+        : first(std::move(other.first)), second(std::move(other.second)) {}
 
     // 从 std::pair 构造
     template <typename U1, typename U2>
@@ -95,33 +111,30 @@ public:
     // ========================================================================
 
     // 拷贝赋值
-    pair& operator=(const pair& other) {
-        if (this != &other) {
-            first = other.first;
-            second = other.second;
-        }
+    MYSTL_ALWAYS_INLINE pair& operator=(const pair& other) {
+        first = other.first;
+        second = other.second;
         return *this;
     }
 
     // 移动赋值
-    pair& operator=(pair&& other) noexcept {
-        if (this != &other) {
-            first = std::move(other.first);
-            second = std::move(other.second);
-        }
+    MYSTL_ALWAYS_INLINE pair& operator=(pair&& other) noexcept(noexcept(first = std::move(other.first)) && noexcept(second = std::move(other.second))) {
+        first = std::move(other.first);
+        second = std::move(other.second);
         return *this;
     }
 
     // 从其他 pair 类型赋值
     template <typename U1, typename U2>
-    pair& operator=(const pair<U1, U2>& other) {
+    MYSTL_ALWAYS_INLINE pair& operator=(const pair<U1, U2>& other) {
         first = other.first;
         second = other.second;
         return *this;
     }
 
     template <typename U1, typename U2>
-    pair& operator=(pair<U1, U2>&& other) {
+    MYSTL_ALWAYS_INLINE pair& operator=(pair<U1, U2>&& other) 
+        noexcept(noexcept(first = std::forward<U1>(other.first)) && noexcept(second = std::forward<U2>(other.second))) {
         first = std::forward<U1>(other.first);
         second = std::forward<U2>(other.second);
         return *this;
@@ -129,14 +142,15 @@ public:
 
     // 从 std::pair 赋值
     template<typename U1, typename U2>
-    pair& operator=(std::pair<U1, U2>& other) {
+    MYSTL_ALWAYS_INLINE pair& operator=(std::pair<U1, U2>& other) {
         first = other.first;
         second = other.second;
         return *this;
     }
 
     template<typename U1, typename U2>
-    pair& operator=(std::pair<U1, U2>&& other) {
+    MYSTL_ALWAYS_INLINE pair& operator=(std::pair<U1, U2>&& other) 
+        noexcept(noexcept(first = std::move(other.first)) && noexcept(second = std::move(other.second))) {
         first = std::move(other.first);
         second = std::move(other.second);
         return *this;
@@ -170,7 +184,7 @@ public:
 // ============================================================================
 
 template <typename T1, typename T2>
-constexpr pair<detail::unwrap_ref_decay_t<T1>, detail::unwrap_ref_decay_t<T2>>
+inline constexpr pair<detail::unwrap_ref_decay_t<T1>, detail::unwrap_ref_decay_t<T2>>
 make_pair(T1&& t, T2&& u) {
     return pair<detail::unwrap_ref_decay_t<T1>, detail::unwrap_ref_decay_t<T2>>(
         std::forward<T1>(t), std::forward<T2>(u));

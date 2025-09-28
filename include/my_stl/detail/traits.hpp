@@ -84,16 +84,16 @@ inline constexpr bool is_nothrow_swappable_v = is_nothrow_swappable<T>::value;
 template <typename T>
 using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
 
-template<class T>
+template <class T>
 struct unwrap_reference { using type = T; };
 
-template<class T>
+template <class T>
 struct unwrap_reference<std::reference_wrapper<T>> { using type = T&; };
 
-template<class T>
+template <class T>
 using unwrap_reference_t = typename unwrap_reference<T>::type;
 
-template<class T>
+template <class T>
 using unwrap_ref_decay_t = unwrap_reference_t<std::decay_t<T>>;
 
 // 添加引用（保持值的类型）
